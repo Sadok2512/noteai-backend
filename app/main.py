@@ -15,13 +15,10 @@ from app import auth  # 🔐 Auth routes (Google + email/pwd)
 
 app = FastAPI()
 
-# ✅ Vérification que le routeur est bien chargé
 print("✅ auth router included!")
 
-# 🔐 Ajouter les routes d'auth
 app.include_router(auth.router)
 
-# ✅ Configuration CORS corrigée
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -36,7 +33,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 📁 Répertoire de stockage
 UPLOAD_DIR = Path("/tmp/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
