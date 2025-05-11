@@ -1,6 +1,8 @@
-
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
+from google.oauth2 import id_token
+from google.auth.transport import requests as grequests
 
 router = APIRouter()
 
@@ -24,14 +26,17 @@ def register_user(data: AuthData):
         raise HTTPException(status_code=400, detail="Email already registered")
     return {"user_id": "registered-" + data.email.split("@")[0], "email": data.email}
 
-from google.oauth2 import id_token
-from google.auth.transport import requests as grequests
-
 GOOGLE_CLIENT_ID = "458012046264-krfaorod6gokr817betrmbegea7sliuo.apps.googleusercontent.com"
 
 class GoogleToken(BaseModel):
     token: str
 
+# ✅ Route OPTIONS pour préflight CORS
+@router.options("/auth/google")
+async def options_auth_google():
+    return JSONResponse(content={"message": "Preflight OK"})
+
+# ✅ Route POST pour Google Auth
 @router.post("/auth/google")
 async def google_auth(payload: GoogleToken):
     try:
