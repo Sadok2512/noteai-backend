@@ -99,8 +99,12 @@ async def download_export(user_id: str, file_id: str, ext: str):
         raise HTTPException(status_code=404, detail="File not found")
     with open(metadata_file, "r") as f:
         metadata = json.load(f)
-    export_file = UPLOAD_DIR / user_id / f"{file_id}.{ext}"
-    export_file.write_text(f"Transcript:
+    export_file = UPLOAD_DIR / user_id / f"{file_id}.{ext}"    export_file.write_text(
+        f"Transcript:\n{metadata['transcript']}\n\nSummary:\n{metadata['summary']}"
+    )
+    return FileResponse(export_file, filename=f"{metadata['filename']}.{ext}")
+
+   
 {metadata['transcript']}
 
 Summary:
