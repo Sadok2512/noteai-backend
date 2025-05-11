@@ -1,50 +1,46 @@
-from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import JSONResponse
+
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
-from google.oauth2 import id_token
-from google.auth.transport import requests as grequests
+from typing import Optional
+from datetime import datetime, timedelta
+from pymongo import MongoClient
+from jose import jwt
+from passlib.context import CryptContext
 
 router = APIRouter()
 
-# 🔐 Modèle de données pour login/register
+# Config
+SECRET_KEY = "noteai-secret"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+# MongoDB
+client = MongoClient("mongodb+srv://sadokbenali:<db_password>@noteai.odx94om.mongodb.net/?retryWrites=true&w=majority&appName=NoteAI")
+db = client["noteai"]
+users_collection = db["users"]
+
+# Password hasher
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 class AuthData(BaseModel):
     email: EmailStr
     password: str
 
-# ✅ Démo login : demo@demo.com / demo
-@router.post("/auth/login")
-def login_user(data: AuthData):
-    print(f"🔐 Tentative de login pour {data.email}")
-    if data.email == "demo@demo.com" and data.password == "demo":
-        return {"user_id": "demo-user", "email": data.email}
-    raise HTTPException(status_code=401, detail="Invalid credentials")
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# 🆕 Fake register (accepte tout sauf test@test.com)
 @router.post("/auth/register")
 def register_user(data: AuthData):
-    if data.email == "test@test.com":
+    existing_user = users_collection.find_one({"email": data.email})
+    if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    return {"user_id": "registered-" + data.email.split("@")[0], "email": data.email}
 
-GOOGLE_CLIENT_ID = "458012046264-krfaorod6gokr817betrmbegea7sliuo.apps.googleusercontent.com"
+    hashed_password = pwd_context.hash(data.password)
+    user = {"email": data.email, "password": hashed_password}
+    users_collection.insert_one(user)
 
-class GoogleToken(BaseModel):
-    token: str
-
-# ✅ Route OPTIONS pour préflight CORS
-@router.options("/auth/google")
-async def options_auth_google():
-    return JSONResponse(content={"message": "Preflight OK"})
-
-# ✅ Route POST pour Google Auth
-@router.post("/auth/google")
-async def google_auth(payload: GoogleToken):
-    try:
-        idinfo = id_token.verify_oauth2_token(payload.token, grequests.Request(), GOOGLE_CLIENT_ID)
-        user_id = idinfo.get("sub")
-        email = idinfo.get("email")
-        name = idinfo.get("name")
-        print(f"🔐 Google login réussi pour {email}")
-        return {"user_id": user_id, "email": email, "name": name}
-    except ValueError:
-        raise HTTPException(status_code=401, detail="Invalid Google token")
+    token = create_access_token({"sub": data.email}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    return {"user_id": str(user["_id"]), "email": data.email, "token": token}
