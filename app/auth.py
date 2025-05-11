@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 
@@ -11,6 +12,7 @@ class AuthData(BaseModel):
 # ✅ Démo login : demo@demo.com / demo
 @router.post("/auth/login")
 def login_user(data: AuthData):
+    print(f"🔐 Tentative de login pour {data.email}")
     if data.email == "demo@demo.com" and data.password == "demo":
         return {"user_id": "demo-user", "email": data.email}
     raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -37,6 +39,7 @@ async def google_auth(payload: GoogleToken):
         user_id = idinfo.get("sub")
         email = idinfo.get("email")
         name = idinfo.get("name")
+        print(f"🔐 Google login réussi pour {email}")
         return {"user_id": user_id, "email": email, "name": name}
     except ValueError:
         raise HTTPException(status_code=401, detail="Invalid Google token")
