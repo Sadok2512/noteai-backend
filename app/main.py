@@ -1,4 +1,3 @@
-
 print("✅ 🚀 MAIN.PY DE SADOK EST EN COURS D'EXÉCUTION ✅")
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
@@ -13,10 +12,19 @@ import json
 from app.utils import save_upload_file, save_metadata_json, get_file_duration_in_seconds
 from app import auth  # 🔐 Auth routes (Google + email/pwd)
 
-app = FastAPI()
+# ✅ FastAPI avec métadonnées pour activer docs
+app = FastAPI(
+    title="NoteAI Backend",
+    description="API for uploading audio files, transcribing, summarizing and downloading.",
+    version="1.0.0"
+)
+
+# ✅ Route racine
+@app.get("/")
+def read_root():
+    return {"message": "🎉 NoteAI Backend is running!"}
 
 print("✅ auth router included!")
-
 app.include_router(auth.router)
 
 app.add_middleware(
