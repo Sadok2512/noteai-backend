@@ -1,7 +1,7 @@
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import uuid
@@ -16,19 +16,33 @@ app = FastAPI()
 print("✅ 🚀 MAIN.PY DE SADOK EST EN COURS D'EXÉCUTION ✅")
 app.include_router(auth.router)
 
+# Configuration CORS
+origins = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",
+    "https://noteai-frontend.netlify.app",
+    "https://noteai-frontend.vercel.app",
+    "https://noteai-backend-production.up.railway.app"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-        "http://localhost:3000",
-        "https://noteai-frontend.netlify.app",
-        "https://noteai-frontend.vercel.app",
-        "https://noteai-backend-production.up.railway.app"
-    ],
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Répond manuellement à la requête OPTIONS si nécessaire
+@app.options("/auth/register")
+def options_register():
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+    }
+    return Response(status_code=204, headers=headers)
 
 UPLOAD_DIR = Path("/tmp/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
