@@ -1,4 +1,3 @@
-print("✅ 🚀 MAIN.PY DE SADOK EST EN COURS D'EXÉCUTION ✅")
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,40 +9,25 @@ import datetime
 import json
 
 from app.utils import save_upload_file, save_metadata_json, get_file_duration_in_seconds
-from app import auth  # 🔐 Auth routes (Google + email/pwd)
+from app import auth
 
-# ✅ FastAPI avec métadonnées pour activer docs
-app = FastAPI(
-    title="NoteAI Backend",
-    description="API for uploading audio files, transcribing, summarizing and downloading.",
-    version="1.0.0"
-)
+app = FastAPI()
 
-# ✅ Route racine
-@app.get("/")
-def read_root():
-    return {"message": "🎉 NoteAI Backend is running!"}
-
-print("✅ auth router included!")
+print("✅ 🚀 MAIN.PY DE SADOK EST EN COURS D'EXÉCUTION ✅")
 app.include_router(auth.router)
 
-# ✅ Middleware CORS corrigé
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:8000",
+        "http://127.0.0.1:8000",
         "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://noteai-frontend.vercel.app",
         "https://noteai-frontend.netlify.app",
-        "https://noteai-backend-production.up.railway.app",
-        "https://web-production-6a289.up.railway.app"
-        "null"
+        "https://noteai-frontend.vercel.app",
+        "https://noteai-backend-production.up.railway.app"
     ],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]
 )
 
 UPLOAD_DIR = Path("/tmp/uploads")
@@ -117,4 +101,3 @@ async def download_export(user_id: str, file_id: str, ext: str):
         f"Transcript:\n{metadata['transcript']}\n\nSummary:\n{metadata['summary']}"
     )
     return FileResponse(export_file, filename=f"{metadata['filename']}.{ext}")
-
