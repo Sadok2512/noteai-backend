@@ -27,6 +27,7 @@ def read_root():
 print("✅ auth router included!")
 app.include_router(auth.router)
 
+# ✅ Middleware CORS corrigé
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -35,10 +36,13 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "https://noteai-frontend.vercel.app",
         "https://noteai-frontend.netlify.app",
-        "https://noteai-backend-production.up.railway.app"
+        "https://noteai-backend-production.up.railway.app",
+        "https://web-production-6a289.up.railway.app"
     ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 UPLOAD_DIR = Path("/tmp/uploads")
@@ -112,3 +116,4 @@ async def download_export(user_id: str, file_id: str, ext: str):
         f"Transcript:\n{metadata['transcript']}\n\nSummary:\n{metadata['summary']}"
     )
     return FileResponse(export_file, filename=f"{metadata['filename']}.{ext}")
+
