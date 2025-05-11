@@ -38,6 +38,7 @@ app.add_middleware(
         "https://noteai-frontend.netlify.app",
         "https://noteai-backend-production.up.railway.app",
         "https://web-production-6a289.up.railway.app"
+        "null"
     ],
     allow_credentials=True,
     allow_methods=["*"],
