@@ -23,3 +23,6 @@ pymongo[srv]
 google-auth
 google-auth-oauthlib
 email-validator
+python-jose
+passlib[bcrypt]
+pymongo
