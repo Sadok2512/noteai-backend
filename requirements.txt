@@ -1,0 +1,25 @@
+fastapi
+uvicorn
+python-multipart
+
+# IA Audio
+openai-whisper
+torchaudio
+torch
+pydub
+pyannote.audio
+transformers
+
+# Utils
+huggingface_hub
+numpy
+scipy
+fpdf
+python-docx
+
+# Auth
+bcrypt
+pymongo[srv]
+google-auth
+google-auth-oauthlib
+email-validator
