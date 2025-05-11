@@ -18,14 +18,20 @@ print("✅ auth router included!")
 # 🔐 Ajouter les routes d'auth
 app.include_router(auth.router)
 
-# CORS autorisé pour tout (Hugging Face + frontend externe)
+# ✅ Configuration CORS corrigée
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:8000",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://noteai-frontend.vercel.app",
+        "https://noteai-frontend.netlify.app",
+        "https://noteai-backend-production.up.railway.app"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # 📁 Répertoire de stockage par utilisateur
 UPLOAD_DIR = Path("/tmp/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
