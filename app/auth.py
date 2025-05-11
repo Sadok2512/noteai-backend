@@ -44,3 +44,16 @@ def register_user(data: AuthData):
 
     token = create_access_token({"sub": data.email}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"user_id": str(user["_id"]), "email": data.email, "token": token}
+
+
+@router.post("/auth/login")
+def login_user(data: AuthData):
+    user = users_collection.find_one({"email": data.email})
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    if not pwd_context.verify(data.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    token = create_access_token({"sub": data.email}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    return {"user_id": str(user["_id"]), "email": data.email, "token": token}
