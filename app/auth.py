@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 from typing import Optional
@@ -7,6 +6,7 @@ from pymongo import MongoClient
 from jose import jwt
 from passlib.context import CryptContext
 
+# ✅ Define router with prefix in main.py, not here
 router = APIRouter()
 
 # Config
@@ -32,7 +32,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-@router.post("/auth/register")
+# ✅ Change from "/auth/register" to just "/register"
+@router.post("/register")
 def register_user(data: AuthData):
     existing_user = users_collection.find_one({"email": data.email})
     if existing_user:
@@ -46,7 +47,7 @@ def register_user(data: AuthData):
     return {"user_id": str(user["_id"]), "email": data.email, "token": token}
 
 
-@router.post("/auth/login")
+@router.post("/login")
 def login_user(data: AuthData):
     user = users_collection.find_one({"email": data.email})
     if not user:
