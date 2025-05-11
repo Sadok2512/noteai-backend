@@ -1,62 +1,60 @@
-
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Request, Response
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import uuid
 import datetime
 import json
 
-from app.utils import save_upload_file, save_metadata_json, get_file_duration_in_seconds
-from app import auth
+from app import auth  # Assuming you have an auth module/router
 
 app = FastAPI()
 
-print("✅ 🚀 MAIN.PY DE SADOK EST EN COURS D'EXÉCUTION ✅")
+# Mount authentication router
 app.include_router(auth.router)
 
-# Configuration CORS
+# ----------------------
+# ✅ CORS Configuration
+# ----------------------
 origins = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "http://localhost:3000",
-    "https://noteai-frontend.netlify.app",
-    "https://noteai-frontend.vercel.app",
-    "https://noteai-backend-production.up.railway.app"
+    "https://noteai-frontend.vercel.app ",
+    "https://noteai-frontend.netlify.app "
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=origins,  # List of allowed origins
+    allow_credentials=True,  # Allow cookies/auth headers
+    allow_methods=["*"],     # Allow all HTTP methods
+    allow_headers=["*"],     # Allow all headers
 )
 
-# Répond manuellement à la requête OPTIONS si nécessaire
-@app.options("/auth/register")
-def options_register():
-    headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-    }
-    return Response(status_code=204, headers=headers)
-
+# ----------------------
+# 📁 File Upload Setup
+# ----------------------
 UPLOAD_DIR = Path("/tmp/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+# Utility imports (make sure these functions are implemented correctly)
+from app.utils import save_upload_file, save_metadata_json, get_file_duration_in_seconds
+
 
 @app.post("/upload-audio")
 async def upload_audio(file: UploadFile = File(...), user_id: str = Form(...)):
     user_dir = UPLOAD_DIR / user_id
     user_dir.mkdir(parents=True, exist_ok=True)
+
     file_id = str(uuid.uuid4())
     extension = Path(file.filename).suffix
     file_path = user_dir / f"{file_id}{extension}"
+
     save_upload_file(file, file_path)
     duration = get_file_duration_in_seconds(str(file_path))
+
     metadata = {
         "id": file_id,
         "filename": file.filename,
@@ -66,9 +64,12 @@ async def upload_audio(file: UploadFile = File(...), user_id: str = Form(...)):
         "transcript": "",
         "summary": ""
     }
+
     metadata_path = file_path.with_suffix(".json")
     save_metadata_json(metadata, metadata_path)
+
     return {"message": "Upload successful", "metadata": metadata}
+
 
 @app.get("/history/{user_id}")
 async def get_history(user_id: str):
@@ -81,6 +82,7 @@ async def get_history(user_id: str):
             history.append(json.load(f))
     return sorted(history, key=lambda x: x["uploaded_at"], reverse=True)
 
+
 @app.post("/transcribe/{user_id}/{file_id}")
 async def transcribe(user_id: str, file_id: str):
     metadata_file = next((UPLOAD_DIR / user_id).glob(f"{file_id}*.json"), None)
@@ -92,6 +94,7 @@ async def transcribe(user_id: str, file_id: str):
     save_metadata_json(metadata, metadata_file)
     return {"transcript": metadata["transcript"]}
 
+
 @app.post("/summary/{user_id}/{file_id}")
 async def summarize(user_id: str, file_id: str):
     metadata_file = next((UPLOAD_DIR / user_id).glob(f"{file_id}*.json"), None)
@@ -102,6 +105,7 @@ async def summarize(user_id: str, file_id: str):
     metadata["summary"] = f"Résumé généré pour {metadata['filename']}."
     save_metadata_json(metadata, metadata_file)
     return {"summary": metadata["summary"]}
+
 
 @app.get("/download/{user_id}/{file_id}.{ext}")
 async def download_export(user_id: str, file_id: str, ext: str):
@@ -115,3 +119,9 @@ async def download_export(user_id: str, file_id: str, ext: str):
         f"Transcript:\n{metadata['transcript']}\n\nSummary:\n{metadata['summary']}"
     )
     return FileResponse(export_file, filename=f"{metadata['filename']}.{ext}")
+
+
+# Optional: Root route for testing
+@app.get("/")
+async def root():
+    return {"message": "NoteAI Backend is running!"}
