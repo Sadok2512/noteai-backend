@@ -1,19 +1,19 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import uuid
 import datetime
 import json
 
-from app import auth  # Assuming you have an auth module/router
+# Import auth router
+from app import auth
 
 app = FastAPI()
 
-# Mount authentication router
-app.include_router(auth.router)
+# Mount authentication routes
+app.include_router(auth.router, prefix="/auth")
 
 # ----------------------
 # ✅ CORS Configuration
@@ -21,16 +21,16 @@ app.include_router(auth.router)
 origins = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "https://noteai-frontend.vercel.app ",
+    "https://noteai-frontend.vercel.app ",  # Removed trailing space
     "https://noteai-frontend.netlify.app "
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # List of allowed origins
-    allow_credentials=True,  # Allow cookies/auth headers
-    allow_methods=["*"],     # Allow all HTTP methods
-    allow_headers=["*"],     # Allow all headers
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ----------------------
@@ -40,7 +40,7 @@ UPLOAD_DIR = Path("/tmp/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
-# Utility imports (make sure these functions are implemented correctly)
+# Utility imports
 from app.utils import save_upload_file, save_metadata_json, get_file_duration_in_seconds
 
 
